@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Reaction - Local Multiplayer Strategy Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* CSS RESET & BASE STYLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Nunito', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        :root {
+            --bg: #050505;
+            --bg-raised: #0A0A0A;
+            --border: #1a1a1a;
+            --border-strong: #2a2a2a;
+            --text: #FFFFFF;
+            --text-dim: #8a8a8a;
+            --accent: #2ECC71;
+            --accent-2: #FFD60A;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        /* TYPOGRAPHY */
+        h1, h2, h3 {
+            font-family: 'Baloo 2', 'Nunito', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
+        h1 {
+            font-size: clamp(2.8rem, 7vw, 5rem);
+            line-height: 1.05;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: clamp(1.9rem, 4vw, 2.6rem);
+            margin-bottom: 56px;
+            text-align: center;
+            letter-spacing: -0.3px;
+        }
+
+        p {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+        }
+
+        /* LAYOUT & SECTIONS */
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        section {
+            padding: 140px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* HEADER / NAVIGATION */
+        header {
+            padding: 28px 0;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background-color: rgba(5, 5, 5, 0.92);
+            backdrop-filter: blur(6px);
+            z-index: 100;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links a {
+            margin-left: 36px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            transition: color 0.15s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        /* HAMBURGER (mobile) */
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .nav-toggle span {
+            width: 22px;
+            height: 2px;
+            background-color: var(--text);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 78vh;
+            padding-top: 60px;
+        }
+
+        .hero-tagline {
+            color: var(--accent-2);
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-bottom: 22px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .hero p {
+            max-width: 560px;
+            margin: 0 auto 48px auto;
+            font-size: 1.15rem;
+        }
+
+        /* CSS GAME GRID VISUAL */
+        .grid-visual {
+            display: grid;
+            grid-template-columns: repeat(3, 46px);
+            grid-template-rows: repeat(3, 46px);
+            gap: 8px;
+            margin-bottom: 56px;
+        }
+
+        .grid-cell {
+            background-color: var(--bg-raised);
+            border: 1px solid var(--border-strong);
+        }
+
+        .grid-cell.orb {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            animation: pulse-orb 2.2s ease-in-out infinite;
+        }
+
+        .grid-cell.orb:nth-child(9) {
+            background-color: var(--accent-2);
+            border-color: var(--accent-2);
+            animation-delay: 0.6s;
+        }
+
+        @keyframes pulse-orb {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.82); }
+        }
+
+        /* BUTTONS (Flat, No Gradients) */
+        .btn {
+            display: inline-block;
+            background-color: var(--accent);
+            color: var(--bg);
+            padding: 17px 46px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-radius: 2px;
+            border: 1px solid var(--accent);
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: transparent;
+            color: var(--accent);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text);
+            border-color: var(--border-strong);
+        }
+
+        .btn-outline:hover {
+            background-color: transparent;
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* FEATURES GRID */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1px;
+            margin-top: 50px;
+            background-color: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .feature-card {
+            background-color: var(--bg-raised);
+            padding: 44px 34px;
+            text-align: left;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background-color: #0D0D0D;
+        }
+
+        .feature-card .num {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin-bottom: 18px;
+        }
+
+        .feature-card h3 {
+            color: var(--text);
+            margin-bottom: 14px;
+            font-size: 1.15rem;
+            letter-spacing: 0.5px;
+        }
+
+        .feature-card p {
+            margin-bottom: 0;
+            font-size: 0.98rem;
+        }
+
+        /* HOW TO PLAY / RULES */
+        .rules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 34px;
+            background-color: var(--bg-raised);
+        }
+
+        .rule-number {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin-right: 32px;
+            line-height: 1;
+            min-width: 40px;
+        }
+
+        .rule-text h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .rule-text p {
+            margin-bottom: 0;
+        }
+
+        /* STRATEGY */
+        .strategy-block {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* CREDITS SECTION — warm, distinct from the rest of the site */
+        #credits {
+            background-color: #170B10;
+            border-bottom: none;
+            position: relative;
+        }
+
+        .credits-heart {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 18px;
+            opacity: 0.9;
+            color: #E8879F;
+        }
+
+        #credits h2 {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-weight: 400;
+            font-style: italic;
+            text-transform: none;
+            letter-spacing: 0;
+            color: #F5DDE3;
+            font-size: clamp(1.9rem, 3.5vw, 2.4rem);
+            margin-bottom: 22px;
+        }
+
+        .credits-note {
+            font-family: Georgia, 'Times New Roman', serif;
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 56px auto;
+            color: #C99AAA;
+            font-size: 1.08rem;
+            font-style: italic;
+            line-height: 1.8;
+        }
+
+        .credits-group {
+            max-width: 780px;
+            margin: 0 auto 0 auto;
+        }
+
+        .credits-label {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 0.8rem;
+            font-weight: 400;
+            font-style: italic;
+            letter-spacing: 1px;
+            color: #E0708F;
+            text-transform: none;
+            margin-bottom: 26px;
+            text-align: center;
+        }
+
+        .credits-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            border-top: none;
+        }
+
+        .credit-name {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: #F5DDE3;
+            padding: 11px 22px;
+            border: 1px solid #4A2733;
+            border-radius: 999px;
+            background-color: rgba(224, 112, 143, 0.08);
+            flex: 0 0 auto;
+            text-align: center;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .credit-name:hover {
+            background-color: rgba(224, 112, 143, 0.22);
+            border-color: #E0708F;
+            transform: translateY(-3px);
+        }
+
+        .credits-list.family .credit-name {
+            font-size: 1.05rem;
+            padding: 12px 26px;
+        }
+
+        .credits-signoff {
+            text-align: center;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-style: italic;
+            color: #8A5A69;
+            font-size: 0.95rem;
+            margin-top: 56px;
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 50px 0;
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+            letter-spacing: 0.5px;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            section { padding: 90px 0; }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background-color: var(--bg);
+                border-bottom: 1px solid var(--border);
+                padding: 20px 5%;
+            }
+            .nav-links.open {
+                display: flex;
+            }
+            .nav-links a {
+                margin: 14px 0;
+            }
+            .nav-toggle {
+                display: flex;
+            }
+            .rule-item { flex-direction: column; }
+            .rule-number { margin-bottom: 14px; }
+            .grid-visual {
+                grid-template-columns: repeat(3, 38px);
+                grid-template-rows: repeat(3, 38px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="container nav-content">
+            <div class="logo">BUBBLE<span>REACTION</span></div>
+            <nav class="nav-links" id="navLinks">
+                <a href="#features">Features</a>
+                <a href="#how-to-play">How To Play</a>
+                <a href="#strategy">Strategy</a>
+                <a href="#credits">Credits</a>
+            </nav>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero container">
+        <div class="hero-tagline">Plan. Place. Pop.</div>
+        <h1>One Tap.<br>Total Chaos.</h1>
+
+        <div class="grid-visual" aria-hidden="true">
+            <div class="grid-cell"></div>
+            <div class="grid-cell"></div>
+            <div class="grid-cell"></div>
+            <div class="grid-cell"></div>
+            <div class="grid-cell orb"></div>
+            <div class="grid-cell"></div>
+            <div class="grid-cell"></div>
+            <div class="grid-cell"></div>
+            <div class="grid-cell orb"></div>
+        </div>
+
+        <p>Gather your friends for an intensely competitive, local multiplayer puzzle battle. Overload cells, trigger massive chain reactions, and dominate the grid.</p>
+        <a href="https://play.google.com/store/apps/details?id=com.gamesbyjacksonjojup.bubblebuster&pcampaignid=web_share" target="_blank" rel="noopener noreferrer" class="btn">Get it on Google Play</a>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section id="features">
+        <div class="container">
+            <h2>Why Play Bubble Reaction?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="num">01</span>
+                    <h3>Gather Around One Screen</h3>
+                    <p>Designed strictly for local multiplayer. Play with 2 to 7 people simultaneously on a single device.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="num">02</span>
+                    <h3>Massive Chain Reactions</h3>
+                    <p>Experience the satisfaction of haptic feedback and crisp sound effects as you wipe out half the board in a single turn.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="num">03</span>
+                    <h3>Pure Black UI</h3>
+                    <p>A highly premium, completely flat design with zero gradients. Designed to make the colors pop while saving your battery during long sessions.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="num">04</span>
+                    <h3>100% Offline</h3>
+                    <p>No Wi-Fi? No problem. Bubble Reaction runs completely locally so you can play anytime, anywhere.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW TO PLAY SECTION -->
+    <section id="how-to-play">
+        <div class="container">
+            <h2>How To Play</h2>
+            <div class="rules-container">
+                <div class="rule-item">
+                    <div class="rule-number">01</div>
+                    <div class="rule-text">
+                        <h3>Place Your Orb</h3>
+                        <p>Take turns tapping the grid to place an orb. You can only place orbs in empty cells or cells you already own.</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <div class="rule-number">02</div>
+                    <div class="rule-text">
+                        <h3>Reach Critical Mass</h3>
+                        <p>Every cell has a limit. Corners can hold 1 orb, edges hold 2, and the center holds 3. Adding one more pushes it over the edge!</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <div class="rule-number">03</div>
+                    <div class="rule-text">
+                        <h3>Trigger The Explosion</h3>
+                        <p>When a cell overloads, it explodes outward! Your orbs fly into the neighboring cells, capturing them and turning enemy orbs into your own.</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <div class="rule-number">04</div>
+                    <div class="rule-text">
+                        <h3>Eliminate The Competition</h3>
+                        <p>If another player loses all their orbs on the board, they are eliminated. The last player standing wins.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STRATEGY SECTION -->
+    <section id="strategy" style="border-bottom: none;">
+        <div class="container strategy-block">
+            <h2>Master The Grid</h2>
+            <p style="font-size: 1.1rem; margin-bottom: 48px;">Winning requires more than just tapping. Control the highly defensible corner cells early, build up a perimeter on the edges, and set up a massive, interconnected trap before your opponents realize what hit them.</p>
+            <a href="https://play.google.com/store/apps/details?id=com.gamesbyjacksonjojup.bubblebuster&pcampaignid=web_share" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Download Now</a>
+        </div>
+    </section>
+
+    <!-- CREDITS SECTION -->
+    <section id="credits">
+        <div class="container">
+            <div class="credits-heart">♥</div>
+            <h2>With Gratitude</h2>
+            <p class="credits-note">Behind every successful build of Bubble Reaction is a group of amazing people. My heartfelt thanks go to my friends and cousins, who suggested new ideas, tirelessly tested the game, and helped make it better with their feedback. Your support made this game possible.</p>
+
+            <div class="credits-group">
+                <div class="credits-label">Friends &amp; Cousins</div>
+                <div class="credits-list">
+                    <span class="credit-name">Ashlin Joshy</span>
+                    <span class="credit-name">Rishikesh</span>
+                    <span class="credit-name">Antonio Alex</span>
+                    <span class="credit-name">Nandhana</span>
+                    <span class="credit-name">Gowri</span>
+                    <span class="credit-name">Jerald</span>
+                    <span class="credit-name">Alwin Joshy</span>
+                    <span class="credit-name">Anugraha KV</span>
+                    <span class="credit-name">Alan Joshy</span>
+                    <span class="credit-name">Janet Mariya</span>
+                    <span class="credit-name">Androse</span>
+                    <span class="credit-name">Aleena Joshy</span>
+                    <span class="credit-name">Adrino Alex</span>
+                    <span class="credit-name">Mom</span>
+                    <span class="credit-name">Dad</span>
+                </div>
+            </div>
+
+            <p class="credits-signoff">— Thank you for being part of the journey</p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Jackson. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+        navToggle.addEventListener('click', () => {
+            const isOpen = navLinks.classList.toggle('open');
+            navToggle.setAttribute('aria-expanded', isOpen);
+        });
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+    </script>
+
+</body>
+</html>
